@@ -5,15 +5,20 @@ from sklearn.tree import DecisionTreeClassifier
 
 def create_models():
     """
-    Create all classification models
-    that will be compared.
+    Create the classification models used in the project.
+
+    KNN is the main algorithm required by the training project.
+    Logistic Regression and Decision Tree are added for comparison.
     """
 
     models = {
-        "KNN": KNeighborsClassifier(n_neighbors=5),
+        "KNN": KNeighborsClassifier(
+            n_neighbors=5
+        ),
 
         "Logistic Regression": LogisticRegression(
-            max_iter=200
+            max_iter=1000,
+            random_state=42
         ),
 
         "Decision Tree": DecisionTreeClassifier(
@@ -24,18 +29,32 @@ def create_models():
     return models
 
 
-def train_models(models, X_train, y_train):
+def train_models(
+    models,
+    X_train_scaled,
+    y_train
+):
     """
-    Train every model using the training data.
+    Train all classification models.
+
+    Returns:
+        Dictionary containing trained models.
     """
 
     trained_models = {}
+
+    print("\n" + "=" * 60)
+    print("TRAINING CLASSIFICATION MODELS")
+    print("=" * 60)
 
     for name, model in models.items():
 
         print(f"\nTraining {name}...")
 
-        model.fit(X_train, y_train)
+        model.fit(
+            X_train_scaled,
+            y_train
+        )
 
         trained_models[name] = model
 

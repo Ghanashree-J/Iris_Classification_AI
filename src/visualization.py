@@ -1,89 +1,85 @@
-import os
 
+import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def create_output_folder():
+def create_visualizations(results):
     """
-    Create the outputs folder if it does not exist.
+    Create and save visualizations for model evaluation.
+
+    Generates:
+    1. Confusion matrix for each model
+    2. Model performance comparison chart
     """
 
+    # Create outputs folder if it does not exist
     os.makedirs("outputs", exist_ok=True)
 
+    print("\n" + "=" * 60)
+    print("CREATING VISUALIZATIONS")
+    print("=" * 60)
 
-def plot_confusion_matrix(
-    confusion_matrix_data,
-    model_name
-):
-    """
-    Create and save a confusion matrix
-    for a classification model.
-    """
+    # ---------------------------------------------------------
+    # 1. CONFUSION MATRICES
+    # ---------------------------------------------------------
 
-    create_output_folder()
+    for name, result in results.items():
 
-    plt.figure(figsize=(6, 5))
+        matrix = result["confusion_matrix"]
 
-    sns.heatmap(
-        confusion_matrix_data,
-        annot=True,
-        fmt="d",
-        cmap="Blues",
-        xticklabels=[
-            "Setosa",
-            "Versicolor",
-            "Virginica"
-        ],
-        yticklabels=[
-            "Setosa",
-            "Versicolor",
-            "Virginica"
-        ]
-    )
-
-    plt.title(f"{model_name} - Confusion Matrix")
-    plt.xlabel("Predicted")
-    plt.ylabel("Actual")
-
-    plt.tight_layout()
-
-    filename = (
-        model_name.lower()
-        .replace(" ", "_")
-        + "_confusion_matrix.png"
-    )
-
-    filepath = os.path.join(
-        "outputs",
-        filename
-    )
-
-    plt.savefig(filepath, dpi=300)
-    plt.close()
-
-    print(f"Saved: {filepath}")
-
-
-def plot_all_confusion_matrices(results):
-    """
-    Create confusion matrices for all models.
-    """
-
-    for model_name, metrics in results.items():
-
-        plot_confusion_matrix(
-            metrics["confusion_matrix"],
-            model_name
+        # Create a safe filename
+        file_name = (
+            name.lower()
+            .replace(" ", "_")
         )
 
+        output_path = os.path.join(
+            "outputs",
+            f"{file_name}_confusion_matrix.png"
+        )
 
-def plot_model_comparison(results):
-    """
-    Create a comparison chart for all models.
-    """
+        plt.figure(figsize=(6, 5))
 
-    create_output_folder()
+        sns.heatmap(
+            matrix,
+            annot=True,
+            fmt="d",
+            cmap="Blues",
+            xticklabels=[
+                "Setosa",
+                "Versicolor",
+                "Virginica"
+            ],
+            yticklabels=[
+                "Setosa",
+                "Versicolor",
+                "Virginica"
+            ]
+        )
+
+        plt.title(
+            f"{name} - Confusion Matrix"
+        )
+
+        plt.xlabel("Predicted Class")
+        plt.ylabel("Actual Class")
+
+        plt.tight_layout()
+
+        plt.savefig(
+            output_path,
+            dpi=300,
+            bbox_inches="tight"
+        )
+
+        plt.close()
+
+        print(f"Saved: {output_path}")
+
+    # ---------------------------------------------------------
+    # 2. MODEL PERFORMANCE COMPARISON
+    # ---------------------------------------------------------
 
     model_names = list(results.keys())
 
@@ -108,6 +104,7 @@ def plot_model_comparison(results):
     ]
 
     x = range(len(model_names))
+
     width = 0.2
 
     plt.figure(figsize=(10, 6))
@@ -140,26 +137,47 @@ def plot_model_comparison(results):
         label="F1-Score"
     )
 
-    plt.xlabel("Models")
-    plt.ylabel("Score (%)")
-    plt.title("Classification Model Comparison")
-
     plt.xticks(
         list(x),
         model_names
     )
 
-    plt.ylim(0, 100)
+    plt.ylabel("Score (%)")
+
+    plt.xlabel("Classification Model")
+
+    plt.title(
+        "Iris Classification Model Performance Comparison"
+    )
+
+    plt.ylim(0, 105)
+
     plt.legend()
+
+    plt.grid(
+        axis="y",
+        linestyle="--",
+        alpha=0.5
+    )
 
     plt.tight_layout()
 
-    filepath = os.path.join(
+    comparison_path = os.path.join(
         "outputs",
         "model_comparison.png"
     )
 
-    plt.savefig(filepath, dpi=300)
+    plt.savefig(
+        comparison_path,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
     plt.close()
 
-    print(f"Saved: {filepath}")
+    print(f"Saved: {comparison_path}")
+
+    print(
+        "\nAll visualizations have been saved "
+        "inside the 'outputs' folder."
+    )

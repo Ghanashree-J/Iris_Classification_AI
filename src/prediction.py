@@ -1,6 +1,14 @@
-import os
+from pathlib import Path
+import math
 import joblib
 import pandas as pd
+
+
+# Get the project root directory
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+MODEL_PATH = PROJECT_ROOT / "models" / "best_model.pkl"
+SCALER_PATH = PROJECT_ROOT / "models" / "scaler.pkl"
 
 
 def load_saved_model():
@@ -9,20 +17,53 @@ def load_saved_model():
     from the models folder.
     """
 
-    model_path = os.path.join(
-        "models",
-        "best_model.pkl"
-    )
+    if not MODEL_PATH.exists():
+        raise FileNotFoundError(
+            f"Best model not found at: {MODEL_PATH}"
+        )
 
-    scaler_path = os.path.join(
-        "models",
-        "scaler.pkl"
-    )
+    if not SCALER_PATH.exists():
+        raise FileNotFoundError(
+            f"Scaler not found at: {SCALER_PATH}"
+        )
 
-    best_model = joblib.load(model_path)
-    scaler = joblib.load(scaler_path)
+    best_model = joblib.load(MODEL_PATH)
+    scaler = joblib.load(SCALER_PATH)
+
+    print("Saved model loaded successfully.")
+    print("Saved scaler loaded successfully.")
 
     return best_model, scaler
+
+
+def get_valid_measurement(feature_name):
+    """
+    Ask the user for a valid positive flower measurement.
+    """
+
+    while True:
+
+        try:
+            value = float(
+                input(f"Enter {feature_name} (cm): ")
+            )
+
+            if not math.isfinite(value):
+                print("Invalid number. Please enter a normal numeric value.")
+                continue
+
+            if value <= 0:
+                print("Measurement must be greater than 0.")
+                continue
+
+            if value > 10:
+                print("Measurement must be 10 cm or less.")
+                continue
+
+            return value
+
+        except ValueError:
+            print("Invalid input. Please enter numbers only.")
 
 
 def display_prediction(model, scaler, iris):
@@ -38,27 +79,11 @@ def display_prediction(model, scaler, iris):
     print("\nEnter the flower measurements below.")
     print("Example values: 5.8, 2.7, 4.1, 1.0")
 
-    try:
-        sepal_length = float(
-            input("\nEnter sepal length (cm): ")
-        )
-
-        sepal_width = float(
-            input("Enter sepal width (cm): ")
-        )
-
-        petal_length = float(
-            input("Enter petal length (cm): ")
-        )
-
-        petal_width = float(
-            input("Enter petal width (cm): ")
-        )
-
-    except ValueError:
-        print("\nInvalid input.")
-        print("Please enter numbers only.")
-        return
+    # Get validated measurements
+    sepal_length = get_valid_measurement("sepal length")
+    sepal_width = get_valid_measurement("sepal width")
+    petal_length = get_valid_measurement("petal length")
+    petal_width = get_valid_measurement("petal width")
 
     # Keep feature names consistent with training
     feature_names = [
@@ -68,8 +93,7 @@ def display_prediction(model, scaler, iris):
         "petal width (cm)"
     ]
 
-    # Create a DataFrame so the scaler
-    # receives the same feature names used during training
+    # Create DataFrame
     new_flower = pd.DataFrame(
         [[
             sepal_length,
@@ -84,17 +108,19 @@ def display_prediction(model, scaler, iris):
     new_flower_scaled = scaler.transform(new_flower)
 
     # Make prediction
-    
     prediction = model.predict(new_flower_scaled)
 
-    predicted_class = prediction[0]
+    predicted_class = int(prediction[0])
 
-# Calculate prediction confidence
+    # Calculate prediction confidence
+    confidence = None
+
     if hasattr(model, "predict_proba"):
-        probabilities = model.predict_proba(new_flower_scaled)
+        probabilities = model.predict_proba(
+            new_flower_scaled
+        )
+
         confidence = max(probabilities[0]) * 100
-    else:
-        confidence = None
 
     # Convert numeric class to species name
     species_names = {
@@ -113,15 +139,15 @@ def display_prediction(model, scaler, iris):
     print("=" * 60)
 
     print("\nInput measurements:")
-    print(f"Sepal length : {sepal_length} cm")
-    print(f"Sepal width  : {sepal_width} cm")
-    print(f"Petal length : {petal_length} cm")
-    print(f"Petal width  : {petal_width} cm")
+    print(f"Sepal length : {sepal_length:.2f} cm")
+    print(f"Sepal width  : {sepal_width:.2f} cm")
+    print(f"Petal length : {petal_length:.2f} cm")
+    print(f"Petal width  : {petal_width:.2f} cm")
 
     print("\nPredicted species:")
     print(f">>> {predicted_species}")
 
     if confidence is not None:
-        print(f"AI confidence: {confidence:.2f}%") 
+        print(f"AI confidence: {confidence:.2f}%")
 
     print("=" * 60)

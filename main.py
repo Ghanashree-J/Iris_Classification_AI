@@ -1,173 +1,41 @@
-import sys
 import os
 import joblib
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
-
-from data_loader import load_iris_data, display_dataset_info
-from preprocessing import prepare_data
-from models import create_models, train_models
-from evaluation import evaluate_all_models, display_results
-from visualization import (
-    plot_all_confusion_matrices,
-    plot_model_comparison
-)
-from prediction import (
-    display_prediction,
-    load_saved_model
+from src.data_loader import (
+    load_iris_data,
+    display_dataset_info
 )
 
+from src.preprocessing import prepare_data
 
-def main():
-
-    print("\n" + "=" * 70)
-    print("        IRIS DATA CLASSIFICATION USING AI")
-    print("=" * 70)
-
-    # ---------------------------------------------------------
-    # STEP 1: LOAD DATASET
-    # ---------------------------------------------------------
-
-    print("\n[1] Loading Iris dataset...")
-
-    df, iris = load_iris_data()
-
-    print("Dataset loaded successfully.")
-
-    # ---------------------------------------------------------
-    # STEP 2: UNDERSTAND DATASET
-    # ---------------------------------------------------------
-
-    display_dataset_info(df)
-
-    # ---------------------------------------------------------
-    # STEP 3: PREPARE DATA
-    # ---------------------------------------------------------
-
-    print("\n" + "=" * 70)
-    print("[2] Preparing data...")
-    print("=" * 70)
-
-    (
-        X_train,
-        X_test,
-        y_train,
-        y_test,
-        X_train_scaled,
-        X_test_scaled,
-        scaler
-    ) = prepare_data(df)
-
-    print("\nData split completed.")
-
-    print(f"Training samples : {len(X_train)}")
-    print(f"Testing samples  : {len(X_test)}")
-
-    print("\nFeature scaling completed.")
-
-    # ---------------------------------------------------------
-    # STEP 4: CREATE MODELS
-    # ---------------------------------------------------------
-
-    print("\n" + "=" * 70)
-    print("[3] Creating classification models...")
-    print("=" * 70)
-
-    models = create_models()
-
-    for model_name in models:
-        print(f" - {model_name}")
-
-    # ---------------------------------------------------------
-    # STEP 5: TRAIN MODELS
-    # ---------------------------------------------------------
-
-    print("\n" + "=" * 70)
-    print("[4] Training models...")
-    print("=" * 70)
-
-    trained_models = train_models(
-        models,
-        X_train_scaled,
-        y_train
-    )
-
-    # ---------------------------------------------------------
-    # STEP 6: EVALUATE MODELS
-    # ---------------------------------------------------------
-
-    print("\n" + "=" * 70)
-    print("[5] Evaluating models...")
-    print("=" * 70)
-
-    results = evaluate_all_models(
-        trained_models,
-        X_test_scaled,
-        y_test
-    )
-
-    # ---------------------------------------------------------
-    # STEP 7: DISPLAY RESULTS
-    # ---------------------------------------------------------
-
-    display_results(results)
-
-    # ---------------------------------------------------------
-    # STEP 8: CREATE VISUALIZATIONS
-    # ---------------------------------------------------------
-
-    print("\n" + "=" * 70)
-    print("[6] Creating visualizations...")
-    print("=" * 70)
-
-    plot_all_confusion_matrices(results)
-
-    plot_model_comparison(results)
-
-    print("\nAll visualizations have been saved")
-    print("inside the 'outputs' folder.")
-
-    # ---------------------------------------------------------
-    # STEP 9: FIND BEST MODEL
-    # ---------------------------------------------------------
-
-    print("\n" + "=" * 70)
-    print("[7] Selecting best model...")
-    print("=" * 70)
-
-    best_model_name = max(
-        results,
-        key=lambda name: (
-            results[name]["accuracy"],
-            results[name]["f1_score"]
-    )
+from src.models import (
+    create_models,
+    train_models
 )
 
-    
-    best_model = trained_models[best_model_name]
+from src.evaluation import (
+    evaluate_models,
+    find_best_model
+)
 
-    best_f1 = results[best_model_name]["f1_score"]
+from src.visualization import (
+    create_visualizations
+)
 
-    # ---------------------------------------------------------
-    # LOAD SAVED BEST MODEL
-    # ---------------------------------------------------------
+from src.prediction import (
+    load_saved_model,
+    display_prediction
+)
 
-    saved_model, saved_scaler = load_saved_model()
 
-    print("\nSaved model loaded successfully.")
-    print("Saved scaler loaded successfully.")
-
-    # Use the saved model and scaler for prediction
-    best_model = saved_model
-    scaler = saved_scaler
-
-    print(f"\nBest model: {best_model_name}")
-    print(f"Best Accuracy: {results[best_model_name]['accuracy'] * 100:.2f}%")
-    print(f"Best F1-Score: {best_f1 * 100:.2f}%")
-
-     # ---------------------------------------------------------
-    # SAVE BEST MODEL AND SCALER
-    # ---------------------------------------------------------
+def save_best_model(
+    best_model,
+    scaler
+):
+    """
+    Save the selected best model and scaler
+    into the models folder.
+    """
 
     os.makedirs("models", exist_ok=True)
 
@@ -195,43 +63,172 @@ def main():
     print(f"Model saved at  : {model_path}")
     print(f"Scaler saved at : {scaler_path}")
 
+
+def main():
+
+    print("\n" + "=" * 60)
+    print("IRIS DATA CLASSIFICATION USING AI")
+    print("=" * 60)
+
     # ---------------------------------------------------------
-    # STEP 10: TEST COMPLETELY NEW DATA
+    # STEP 1 - LOAD DATASET
     # ---------------------------------------------------------
 
-    print("\n" + "=" * 70)
-    print("[8] Testing a completely new flower...")
-    print("=" * 70)
+    print("\n[1] Loading Iris dataset...")
+    
+    df, iris = load_iris_data()
 
-    # Example new flower measurements
-    sepal_length = 5.8
-    sepal_width = 2.7
-    petal_length = 4.1
-    petal_width = 1.0
+    print("Dataset loaded successfully.")
 
- # ---------------------------------------------------------
-# TEST A COMPLETELY NEW FLOWER
-# ---------------------------------------------------------
+    display_dataset_info(df)
 
-    print("\n" + "=" * 70)
-    print("[8] Testing a completely new flower...")
-    print("=" * 70)
+    # ---------------------------------------------------------
+    # STEP 2 - PREPARE DATA
+    # ---------------------------------------------------------
 
-    display_prediction(
+    print("\n" + "=" * 60)
+    print("[2] Preparing data...")
+    print("=" * 60)
+
+    (
+        X_train,
+        X_test,
+        y_train,
+        y_test,
+        X_train_scaled,
+        X_test_scaled,
+        scaler
+    ) = prepare_data(df)
+
+    print("\nData split completed.")
+
+    print(
+        f"Training samples : {len(X_train)}"
+    )
+
+    print(
+        f"Testing samples  : {len(X_test)}"
+    )
+
+    print("\nFeature scaling completed.")
+
+    # ---------------------------------------------------------
+    # STEP 3 - CREATE MODELS
+    # ---------------------------------------------------------
+
+    print("\n" + "=" * 60)
+    print("[3] Creating classification models...")
+    print("=" * 60)
+
+    models = create_models()
+
+    for name in models:
+        print(f"- {name}")
+
+    # ---------------------------------------------------------
+    # STEP 4 - TRAIN MODELS
+    # ---------------------------------------------------------
+
+    trained_models = train_models(
+        models,
+        X_train_scaled,
+        y_train
+    )
+
+    # ---------------------------------------------------------
+    # STEP 5 - EVALUATE MODELS
+    # ---------------------------------------------------------
+
+    results = evaluate_models(
+        trained_models,
+        X_test_scaled,
+        y_test
+    )
+
+    # ---------------------------------------------------------
+    # STEP 6 - CREATE VISUALIZATIONS
+    # ---------------------------------------------------------
+
+    create_visualizations(results)
+
+    # ---------------------------------------------------------
+    # STEP 7 - SELECT BEST MODEL
+    # ---------------------------------------------------------
+
+    print("\n" + "=" * 60)
+    print("[7] Selecting best model...")
+    print("=" * 60)
+
+    best_model_name, best_f1_score = find_best_model(
+        results
+    )
+
+    best_model = trained_models[
+        best_model_name
+    ]
+
+    best_accuracy = results[
+        best_model_name
+    ]["accuracy"]
+
+    print(
+        f"\nBest model: {best_model_name}"
+    )
+
+    print(
+        f"Best Accuracy: "
+        f"{best_accuracy * 100:.2f}%"
+    )
+
+    print(
+        f"Best F1-Score: "
+        f"{best_f1_score * 100:.2f}%"
+    )
+
+    # Save selected model and scaler
+    save_best_model(
         best_model,
-        scaler,
-        iris 
-)
+        scaler
+    )
 
     # ---------------------------------------------------------
-    # PROJECT COMPLETED
+    # STEP 8 - TEST COMPLETELY NEW FLOWER
     # ---------------------------------------------------------
 
-    print("\n" + "=" * 70)
+    print("\n" + "=" * 60)
+    print("[8] Testing a completely new flower...")
+    print("=" * 60)
+
+    try:
+
+        saved_model, saved_scaler = load_saved_model()
+
+        display_prediction(
+            saved_model,
+            saved_scaler,
+            iris
+        )
+
+    except FileNotFoundError as error:
+
+        print("\nModel loading error:")
+        print(error)
+
+    except Exception as error:
+
+        print("\nPrediction error:")
+        print(error)
+
+    # ---------------------------------------------------------
+    # PROJECT SUMMARY
+    # ---------------------------------------------------------
+
+    print("\n" + "=" * 60)
     print("PROJECT COMPLETED SUCCESSFULLY")
-    print("=" * 70)
+    print("=" * 60)
 
     print("\nYour AI classification system has:")
+
     print("✓ Loaded the Iris dataset")
     print("✓ Analyzed the dataset")
     print("✓ Split data into training and testing sets")
@@ -242,8 +239,11 @@ def main():
     print("✓ Compared model performance")
     print("✓ Generated confusion matrices")
     print("✓ Generated model comparison chart")
-    print("✓ Selected the best model")
+    print("✓ Selected the best model automatically")
+    print("✓ Saved the best model and scaler")
     print("✓ Tested completely new flower data")
+
+    print("\n" + "=" * 60)
 
 
 if __name__ == "__main__":
