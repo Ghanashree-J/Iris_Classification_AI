@@ -1,0 +1,22 @@
+# Virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Generated model files
+models/*.pkl
+
+# Generated output images
+outputs/*.png
+
+# VS Code
+.vscode/
+
+# Operating system files
+.DS_Store
+Thumbs.db
